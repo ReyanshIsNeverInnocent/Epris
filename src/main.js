@@ -20,7 +20,7 @@ function renderSidebar() {
     <aside class="sidebar">
       <a class="brand" href="#" aria-label="Épris home">
         <span class="brand-mark" aria-hidden="true">♡</span>
-        <span class="brand-name">Épris<span class="brand-dot">.</span><small>MEANS ENAMORED/INFATUATED IN FRENCH</small></span>
+        <span class="brand-name">Épris<span class="brand-dot">.</span><small>MEANS ENAMORED OR INFATUATED IN FRENCH</small></span>
       </a>
       <div class="side-label">YOUR LITTLE CORNER</div>
       <nav class="tool-nav" aria-label="Love games">
