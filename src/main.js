@@ -18,9 +18,9 @@ let activeTool = 'flames';
 function renderSidebar() {
   return `
     <aside class="sidebar">
-      <a class="brand" href="#" aria-label="Hatsukoi home">
+      <a class="brand" href="#" aria-label="Épris home">
         <span class="brand-mark" aria-hidden="true">♡</span>
-        <span class="brand-name">hatsukoi<span class="brand-dot">.</span><small>FIRST LOVE, LITTLE GAMES</small></span>
+        <span class="brand-name">Épris<span class="brand-dot">.</span><small>FIRST LOVE, LITTLE GAMES</small></span>
       </a>
       <div class="side-label">YOUR LITTLE CORNER</div>
       <nav class="tool-nav" aria-label="Love games">
