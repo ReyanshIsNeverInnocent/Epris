@@ -4,6 +4,8 @@ package-lock.json
 
 # Build output
 dist/
+.output/
+.vercel/
 
 # Local environment variables
 .env
