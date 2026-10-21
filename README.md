@@ -16,7 +16,7 @@
 
 > “A little corner for the curious heart.”
 
-<p style="color: #8a8a8a;">NOTE: the contents of this readme were written by Gemini </p>
+<sub><i>Note: This README was written with help from Gemini.</i></sub>
 
 <h2 id="about">🌸 About</h2>
 
