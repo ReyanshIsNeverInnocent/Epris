@@ -1,7 +1,7 @@
-# Épris ✨
+<h1 align="center">Épris</h1>
 
 <p align="center">
-  <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1200&q=80" alt="Dreamy romantic aesthetic" width="1000" />
+  <img src="https://i.ibb.co/7dQkH5MH/download-9.jpg" alt="stupidity" width="1000" />
 </p>
 
 <p align="center">
@@ -35,8 +35,6 @@
 npm install
 npm run dev
 ```
-
-Then open: http://localhost:5173
 
 ## 📜 Scripts
 
