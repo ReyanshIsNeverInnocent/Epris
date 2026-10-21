@@ -21,7 +21,7 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
 .layout { height: 100vh; height: 100dvh; min-height: 0; display: grid; grid-template-columns: 250px minmax(0, 1fr); overflow: hidden; }
 .sidebar { background: #ffe5eb; border-right: 2px solid #f7cbd7; padding: 30px 19px 24px; display: flex; flex-direction: column; height: 100vh; height: 100dvh; min-height: 0; position: sticky; top: 0; z-index: 2; }
 .brand { display: flex; align-items: center; gap: 11px; text-decoration: none; color: var(--ink); margin: 0 0 49px 5px; }
-.brand-mark { width: 46px; height: 46px; display: grid; place-items: center; border: 2px solid #382440; color: #382440; border-radius: 16px 13px 17px 12px; font: 600 25px 'Fredoka', sans-serif; transform: rotate(-7deg); background: #fff8ef; }
+.brand-mark { width: 43px; height: 43px; flex: 0 0 auto; object-fit: cover; transform: rotate(-7deg); }
 .brand-name { font: 600 27px/1 'Fredoka', sans-serif; letter-spacing: -.8px; }
 .brand-dot { color: #ed4f7a; }
 .brand-name small { display: block; margin-top: 5px; font: 800 9px 'Nunito', sans-serif; letter-spacing: 1px; color: #755b6a; }
@@ -195,7 +195,7 @@ h1 em { color: #e85079; font-weight: 600; font-style: normal; }
   .layout { min-height: 0; grid-template-columns: 225px minmax(0, 1fr); }
   .sidebar { padding: 27px 17px 22px; }
   .brand { gap: 10px; margin: 0 0 44px 4px; }
-  .brand-mark { width: 41px; height: 41px; font-size: 22px; }
+  .brand-mark { width: 39px; height: 39px; }
   .brand-name { font-size: 24px; }
   .brand-name small { font-size: 8px; }
   .side-label, .legend-heading { font-size: 10px; }
