@@ -35,6 +35,9 @@ function isRateLimited(ip) {
 }
 
 async function readJson(req) {
+  if (typeof req.body === 'string') return JSON.parse(req.body);
+  if (req.body && typeof req.body === 'object') return req.body;
+
   const chunks = [];
   let size = 0;
   for await (const chunk of req) {
