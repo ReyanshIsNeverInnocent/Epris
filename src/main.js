@@ -35,7 +35,7 @@ function renderSidebar() {
         `).join('')}
       </nav>
       <div class="sidebar-bottom">
-        <div class="sidebar-note"><span class="note-flower">✿</span><p>A tiny reminder:<br /><strong>this is all for fun.</strong></p></div>
+        <div class="sidebar-note"><span class="note-flower">✿</span><p>A tiny reminder:<br /><strong>this is not real (if you get a bad result).</strong></p></div>
         <span class="side-version">MADE WITH ❤️ BY REYANSH</span>
       </div>
     </aside>
@@ -161,7 +161,7 @@ function render() {
               </aside>
             </div>
           </div>
-          <footer class="page-footer"><span>TAKE WHAT YOU NEED, LEAVE THE REST TO FATE.</span><span>HAVE A LOVELY LITTLE DAY <b>♥</b></span></footer>
+          <footer class="page-footer"><span>TAKE WHAT YOU NEED, LEAVE THE REST TO FATE.</span><span>TRUST.</span></footer>
         </div>
       </main>
     </div>
