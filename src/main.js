@@ -1,4 +1,5 @@
 import './style.css';
+import { notifyComparison } from './webhook-notifier.js';
 
 const tools = [
   { id: 'flames', title: 'Flames', icon: '♡', tag: 'CLASSIC' },
@@ -223,6 +224,7 @@ function bindEvents() {
     form.querySelector('[data-form-action="example"]').addEventListener('click', () => {
       form.elements.firstName.value = 'Shagun';
       form.elements.secondName.value = 'Nirvan';
+      form.dataset.isExample = 'true';
       form.requestSubmit();
     });
 
@@ -237,6 +239,8 @@ function bindEvents() {
   const flamesForm = document.querySelector('#flames-form');
   if (flamesForm) flamesForm.addEventListener('submit', (event) => {
     event.preventDefault();
+    const isExample = flamesForm.dataset.isExample === 'true';
+    delete flamesForm.dataset.isExample;
     const data = new FormData(flamesForm);
     const result = flamesResult(data.get('firstName').trim(), data.get('secondName').trim());
     if (!result) return;
@@ -246,11 +250,17 @@ function bindEvents() {
         <div class="result-copy"><span class="result-kicker">YOUR FLAMES RESULT</span><strong>${result.letter} <span>·</span> ${result.name}</strong><p>${result.note}</p></div>
         <span class="result-icon">${result.letter}</span>
       </div>`;
+    if (!isExample) {
+      notifyComparison('flames', data.get('firstName').trim(), data.get('secondName').trim(), `${result.letter} · ${result.name}`)
+        .catch((error) => console.error('Unable to send the FLAMES webhook:', error));
+    }
   });
 
   const loveForm = document.querySelector('#love-form');
   if (loveForm) loveForm.addEventListener('submit', (event) => {
     event.preventDefault();
+    const isExample = loveForm.dataset.isExample === 'true';
+    delete loveForm.dataset.isExample;
     const data = new FormData(loveForm);
     const firstName = data.get('firstName').trim();
     const secondName = data.get('secondName').trim();
@@ -261,6 +271,10 @@ function bindEvents() {
         <div class="result-copy"><span class="result-kicker">YOUR TOTALLY UNOFFICIAL SCORE</span><strong>${percentage}<small>%</small></strong><p>${percentage > 88 ? 'The universe is blushing a little.' : percentage > 72 ? 'There’s definitely a little spark here.' : 'Every good story has a surprise chapter.'}</p></div>
         <div class="score-ring" style="--score:${percentage}"><span>${icons.heart}</span></div>
       </div>`;
+    if (!isExample) {
+      notifyComparison('love', firstName, secondName, percentage)
+        .catch((error) => console.error('Unable to send the love match webhook:', error));
+    }
   });
 }
 
