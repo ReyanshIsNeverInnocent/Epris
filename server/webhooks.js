@@ -19,6 +19,30 @@ function isValidName(name) {
   return typeof name === 'string' && name.trim().length > 0 && name.length <= 40;
 }
 
+function normalizeName(name) {
+  return name.normalize('NFKD').toLocaleLowerCase().replace(/[\p{M}\p{P}\p{Z}\p{S}]/gu, '');
+}
+
+function isConfiguredInfinityPair(firstName, secondName) {
+  const configuredNames = [
+    process.env.DEVELOPER_NAME,
+    process.env.DEVELOPERS_CRUSH_NAME,
+  ].map((name) => normalizeName(name || '')).sort();
+  const submittedNames = [normalizeName(firstName), normalizeName(secondName)].sort();
+  return configuredNames.every(Boolean)
+    && submittedNames[0] === configuredNames[0]
+    && submittedNames[1] === configuredNames[1];
+}
+
+function lovePercentage(firstName, secondName) {
+  if (isConfiguredInfinityPair(firstName, secondName)) return 'Infinity';
+  const names = [normalizeName(firstName), normalizeName(secondName)].sort();
+  const input = `${names[0]}:${names[1]}`;
+  let hash = 0;
+  for (const char of input) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return 55 + (hash % 46);
+}
+
 function safeEmbedName(name) {
   return name.trim().replaceAll('@', '@\u200b');
 }
@@ -46,6 +70,44 @@ async function readJson(req) {
     chunks.push(chunk);
   }
   return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+}
+
+export async function handleLoveScoreRequest(req, res) {
+  const path = new URL(req.url || '/', 'http://localhost').pathname;
+  if (path !== '/api/love-score') return false;
+
+  if (req.method !== 'POST') {
+    sendJson(res, 405, { error: 'Method not allowed.' });
+    return true;
+  }
+
+  if (!req.headers['content-type']?.includes('application/json')) {
+    sendJson(res, 415, { error: 'Expected a JSON request.' });
+    return true;
+  }
+
+  const ip = req.socket.remoteAddress || 'unknown';
+  if (isRateLimited(ip)) {
+    sendJson(res, 429, { error: 'Too many comparisons. Try again in a minute.' });
+    return true;
+  }
+
+  let payload;
+  try {
+    payload = await readJson(req);
+  } catch {
+    sendJson(res, 400, { error: 'Invalid or oversized JSON request.' });
+    return true;
+  }
+
+  const { firstName, secondName } = payload ?? {};
+  if (!isValidName(firstName) || !isValidName(secondName)) {
+    sendJson(res, 400, { error: 'Names or comparison result are invalid.' });
+    return true;
+  }
+
+  sendJson(res, 200, { percentage: lovePercentage(firstName, secondName) });
+  return true;
 }
 
 export async function handleWebhookRequest(req, res, expectedTool) {
@@ -78,10 +140,13 @@ export async function handleWebhookRequest(req, res, expectedTool) {
   }
 
   const { firstName, secondName, result } = payload ?? {};
+  const validNames = isValidName(firstName) && isValidName(secondName);
   const validResult = tool === 'flames'
     ? FLAMES_RESULTS.has(result)
-    : Number.isInteger(result) && result >= 55 && result <= 100;
-  if (!isValidName(firstName) || !isValidName(secondName) || !validResult) {
+    : result === 'Infinity'
+      ? validNames && isConfiguredInfinityPair(firstName, secondName)
+      : Number.isInteger(result) && result >= 55 && result <= 100;
+  if (!validNames || !validResult) {
     sendJson(res, 400, { error: 'Names or comparison result are invalid.' });
     return true;
   }

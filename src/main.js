@@ -204,14 +204,6 @@ function flamesResult(firstName, secondName) {
   return outcomes.find((outcome) => outcome.letter === remainingLetters[0]);
 }
 
-function lovePercentage(firstName, secondName) {
-  const names = [normalizeName(firstName), normalizeName(secondName)].sort();
-  const input = `${names[0]}:${names[1]}`;
-  let hash = 0;
-  for (const char of input) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  return 55 + (hash % 46);
-}
-
 function bindEvents() {
   document.querySelectorAll('[data-tool]:not(:disabled)').forEach((button) => {
     button.addEventListener('click', () => {
@@ -257,22 +249,41 @@ function bindEvents() {
   });
 
   const loveForm = document.querySelector('#love-form');
-  if (loveForm) loveForm.addEventListener('submit', (event) => {
+  if (loveForm) loveForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const isExample = loveForm.dataset.isExample === 'true';
     delete loveForm.dataset.isExample;
     const data = new FormData(loveForm);
     const firstName = data.get('firstName').trim();
     const secondName = data.get('secondName').trim();
-    const percentage = lovePercentage(firstName, secondName);
+    let percentage;
+    try {
+      const response = await fetch('/api/love-score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName, secondName }),
+      });
+      if (!response.ok) throw new Error(`Love score API returned HTTP ${response.status}.`);
+      const result = await response.json();
+      percentage = result.percentage;
+      if (percentage !== 'Infinity' && (!Number.isInteger(percentage) || percentage < 55 || percentage > 100)) {
+        throw new Error('Love score API returned an invalid result.');
+      }
+      if (percentage === 'Infinity') percentage = Infinity;
+    } catch (error) {
+      console.error('Unable to calculate the love score:', error);
+      document.querySelector('#love-result').textContent = 'Unable to calculate the love score. Please try again.';
+      document.querySelector('.layout').classList.add('has-result');
+      return;
+    }
     document.querySelector('.layout').classList.add('has-result');
     document.querySelector('#love-result').innerHTML = `
       <div class="result-card love-result-card">
-        <div class="result-copy"><span class="result-kicker">YOUR TOTALLY UNOFFICIAL SCORE</span><strong>${percentage}<small>%</small></strong><p>${percentage > 88 ? 'The universe is blushing a little.' : percentage > 72 ? 'There’s definitely a little spark here.' : 'Every good story has a surprise chapter.'}</p></div>
-        <div class="score-ring" style="--score:${percentage}"><span>${icons.heart}</span></div>
+        <div class="result-copy"><span class="result-kicker">YOUR TOTALLY UNOFFICIAL SCORE</span><strong>${percentage}${Number.isFinite(percentage) ? '' : ' '}<small>%</small></strong><p>${percentage > 88 ? 'The universe is blushing a little.' : percentage > 72 ? 'There’s definitely a little spark here.' : 'Every good story has a surprise chapter.'}</p></div>
+        <div class="score-ring" style="--score:${Number.isFinite(percentage) ? percentage : 100}"><span>${icons.heart}</span></div>
       </div>`;
     if (!isExample) {
-      notifyComparison('love', firstName, secondName, percentage)
+      notifyComparison('love', firstName, secondName, Number.isFinite(percentage) ? percentage : 'Infinity')
         .catch((error) => console.error('Unable to send the love match webhook:', error));
     }
   });

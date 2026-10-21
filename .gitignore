@@ -10,7 +10,6 @@ dist/
 # Local environment variables
 .env
 .env.*
-!.env.example
 
 # Logs
 npm-debug.log*

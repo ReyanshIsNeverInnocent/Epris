@@ -3,7 +3,7 @@ import { access, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { handleWebhookRequest } from './server/webhooks.js';
+import { handleLoveScoreRequest, handleWebhookRequest } from './server/webhooks.js';
 
 const root = resolve(fileURLToPath(new URL('./dist/', import.meta.url)));
 const mimeTypes = {
@@ -16,12 +16,13 @@ const mimeTypes = {
 
 const server = createServer(async (req, res) => {
   try {
+    if (await handleLoveScoreRequest(req, res)) return;
     if (await handleWebhookRequest(req, res)) return;
   } catch (error) {
-    console.error('Webhook API request failed:', error);
+    console.error('API request failed:', error);
     if (!res.headersSent) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Unable to process webhook request.' }));
+      res.end(JSON.stringify({ error: 'Unable to process API request.' }));
     }
     return;
   }

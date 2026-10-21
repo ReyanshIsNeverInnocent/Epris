@@ -36,6 +36,20 @@ npm install
 npm run dev
 ```
 
+For local configuration, create a root-level `.env` file in this format:
+
+```dotenv
+FLAMES_WEBHOOK_URL=
+LOVE_WEBHOOK_URL=
+DEVELOPER_NAME=YourName
+DEVELOPERS_CRUSH_NAME=YourCrushName
+```
+
+The Love Match pair is a developer tweak: changing `DEVELOPER_NAME` and
+`DEVELOPERS_CRUSH_NAME` changes which pair receives `Infinity %`. The names are
+read by the server and are not bundled into frontend assets. Keep `.env` private
+and do not commit it.
+
 <h2 id="scripts">📜 Scripts</h2>
 
 - `npm run dev` — start the dev server

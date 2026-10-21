@@ -1,17 +1,18 @@
 import { defineConfig } from 'vite';
-import { handleWebhookRequest } from './server/webhooks.js';
+import { handleLoveScoreRequest, handleWebhookRequest } from './server/webhooks.js';
 import { seo } from './seo.js';
 
 function webhookApiPlugin() {
   const middleware = async (req, res, next) => {
     try {
+      if (await handleLoveScoreRequest(req, res)) return;
       const handled = await handleWebhookRequest(req, res);
       if (!handled) next();
     } catch (error) {
-      console.error('Webhook API request failed:', error);
+      console.error('API request failed:', error);
       if (!res.headersSent) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Unable to process webhook request.' }));
+        res.end(JSON.stringify({ error: 'Unable to process API request.' }));
       }
     }
   };
