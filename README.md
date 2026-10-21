@@ -18,31 +18,31 @@
 
 <p style="color: #8a8a8a;">NOTE: the contents of this readme were written by Gemini </p>
 
-## 🌸 About
+<h2 id="about">🌸 About</h2>
 
 Épris is a small romantic web experience shaped around a minimalist, cozy mood. It’s simple, honest, and easy to explore.
 
-## ✨ Highlights
+<h2 id="highlights">✨ Highlights</h2>
 
 - Cozy, minimal aesthetic
 - Lightweight Vite setup
 - Quick local development
 - Soft, romantic visual direction
 
-## 🚀 Quick start
+<h2 id="quick-start">🚀 Quick start</h2>
 
 ```bash
 npm install
 npm run dev
 ```
 
-## 📜 Scripts
+<h2 id="scripts">📜 Scripts</h2>
 
 - `npm run dev` — start the dev server
 - `npm run build` — build the app
 - `npm run preview` — preview the production build
 - `npm run start` — run the server
 
-## 📝 License
+<h2 id="license">📝 License</h2>
 
 MIT © Épris
