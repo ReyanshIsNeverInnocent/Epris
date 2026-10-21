@@ -1,9 +1,13 @@
 import { handleWebhookRequest } from '../server/webhooks.js';
 
 export default async function loveWebhook(req, res) {
-  const handled = await handleWebhookRequest(req, res);
-  if (!handled && !res.headersSent) {
-    res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Not found.' }));
+  try {
+    await handleWebhookRequest(req, res, 'love');
+  } catch (error) {
+    console.error(`Love webhook handler failed (${error.name}).`);
+    if (!res.headersSent) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Unable to process webhook request.' }));
+    }
   }
 }

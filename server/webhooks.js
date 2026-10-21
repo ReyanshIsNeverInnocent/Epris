@@ -48,9 +48,9 @@ async function readJson(req) {
   return JSON.parse(Buffer.concat(chunks).toString('utf8'));
 }
 
-export async function handleWebhookRequest(req, res) {
-  const path = new URL(req.url, 'http://localhost').pathname;
-  const tool = path === '/api/flames' ? 'flames' : path === '/api/love' ? 'love' : null;
+export async function handleWebhookRequest(req, res, expectedTool) {
+  const path = new URL(req.url || '/', 'http://localhost').pathname;
+  const tool = expectedTool || (path === '/api/flames' ? 'flames' : path === '/api/love' ? 'love' : null);
   if (!tool) return false;
 
   if (req.method !== 'POST') {
