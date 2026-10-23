@@ -1,11 +1,12 @@
 import { defineConfig } from 'vite';
-import { handleLoveScoreRequest, handleWebhookRequest } from './server/webhooks.js';
+import { handleLoveScoreRequest, handleLovesDeveloperRequest, handleWebhookRequest } from './server/webhooks.js';
 import { seo } from './seo.js';
 
 function webhookApiPlugin() {
   const middleware = async (req, res, next) => {
     try {
       if (await handleLoveScoreRequest(req, res)) return;
+      if (await handleLovesDeveloperRequest(req, res)) return;
       const handled = await handleWebhookRequest(req, res);
       if (!handled) next();
     } catch (error) {

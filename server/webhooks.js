@@ -110,9 +110,51 @@ export async function handleLoveScoreRequest(req, res) {
   return true;
 }
 
+export async function handleLovesDeveloperRequest(req, res) {
+  const path = new URL(req.url || '/', 'http://localhost').pathname;
+  if (path !== '/api/loves-developer') return false;
+
+  if (req.method !== 'POST') {
+    sendJson(res, 405, { error: 'Method not allowed.' });
+    return true;
+  }
+
+  if (!req.headers['content-type']?.includes('application/json')) {
+    sendJson(res, 415, { error: 'Expected a JSON request.' });
+    return true;
+  }
+
+  const ip = req.socket.remoteAddress || 'unknown';
+  if (isRateLimited(ip)) {
+    sendJson(res, 429, { error: 'Too many comparisons. Try again in a minute.' });
+    return true;
+  }
+
+  let payload;
+  try {
+    payload = await readJson(req);
+  } catch {
+    sendJson(res, 400, { error: 'Invalid or oversized JSON request.' });
+    return true;
+  }
+
+  const { firstName, secondName } = payload ?? {};
+  if (!isValidName(firstName) || !isValidName(secondName)) {
+    sendJson(res, 400, { error: 'Names are invalid.' });
+    return true;
+  }
+
+  sendJson(res, 200, { isDeveloperPair: isConfiguredInfinityPair(firstName, secondName) });
+  return true;
+}
+
 export async function handleWebhookRequest(req, res, expectedTool) {
   const path = new URL(req.url || '/', 'http://localhost').pathname;
-  const tool = expectedTool || (path === '/api/flames' ? 'flames' : path === '/api/love' ? 'love' : null);
+  const tool = expectedTool || ({
+    '/api/flames': 'flames',
+    '/api/love': 'love',
+    '/api/loves': 'loves',
+  })[path];
   if (!tool) return false;
 
   if (req.method !== 'POST') {
@@ -145,28 +187,34 @@ export async function handleWebhookRequest(req, res, expectedTool) {
     ? FLAMES_RESULTS.has(result)
     : result === 'Infinity'
       ? validNames && isConfiguredInfinityPair(firstName, secondName)
-      : Number.isInteger(result) && result >= 55 && result <= 100;
+      : Number.isInteger(result) && (tool === 'loves'
+        ? result >= 0 && result <= 99
+        : result >= 55 && result <= 100);
   if (!validNames || !validResult) {
     sendJson(res, 400, { error: 'Names or comparison result are invalid.' });
     return true;
   }
 
-  const webhookUrl = process.env[tool === 'flames' ? 'FLAMES_WEBHOOK_URL' : 'LOVE_WEBHOOK_URL'];
+  const webhookUrl = ({
+    flames: process.env.FLAMES_WEBHOOK_URL,
+    love: process.env.LOVE_WEBHOOK_URL,
+    loves: process.env.LOVES_WEBHOOK_URL,
+  })[tool];
   if (!webhookUrl) {
     sendJson(res, 503, { error: 'Webhook is not configured on the server.' });
     return true;
   }
 
   const embed = {
-    title: tool === 'flames' ? 'FLAMES Result' : 'Love Match Result',
-    color: tool === 'flames' ? 0xE98B9F : 0xD97791,
+    title: tool === 'flames' ? 'FLAMES Result' : tool === 'loves' ? 'LOVES Pyramid Result' : 'Love Match Result',
+    color: tool === 'flames' ? 0xE98B9F : tool === 'loves' ? 0x7351A6 : 0xD97791,
     fields: [
       { name: 'First name', value: safeEmbedName(firstName), inline: true },
       { name: 'Second name', value: safeEmbedName(secondName), inline: true },
       { name: 'Result', value: tool === 'flames' ? result : `${result}%`, inline: false },
     ],
     timestamp: new Date().toISOString(),
-    footer: { text: 'Épris · just for fun' },
+    footer: { text: 'Épris' },
   };
 
   try {

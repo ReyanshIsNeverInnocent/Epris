@@ -3,7 +3,7 @@ import { access, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { handleLoveScoreRequest, handleWebhookRequest } from './server/webhooks.js';
+import { handleLoveScoreRequest, handleLovesDeveloperRequest, handleWebhookRequest } from './server/webhooks.js';
 
 const root = resolve(fileURLToPath(new URL('./dist/', import.meta.url)));
 const mimeTypes = {
@@ -17,6 +17,7 @@ const mimeTypes = {
 const server = createServer(async (req, res) => {
   try {
     if (await handleLoveScoreRequest(req, res)) return;
+    if (await handleLovesDeveloperRequest(req, res)) return;
     if (await handleWebhookRequest(req, res)) return;
   } catch (error) {
     console.error('API request failed:', error);

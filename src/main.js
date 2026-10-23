@@ -1,9 +1,13 @@
 import './style.css';
 import { notifyComparison } from './webhook-notifier.js';
+import { zodiacElementReadings, zodiacSigns } from './data/zodiac.js';
+import { calculateLovesPyramid } from './utils/loves.js';
 
 const tools = [
-  { id: 'flames', title: 'Flames', icon: '♡', tag: 'CLASSIC' },
-  { id: 'love', title: 'Love Match', icon: '♡', tag: 'JUST FOR FUN' },
+  { id: 'flames', title: 'Flames', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.7 2.4c.8 3.7-1.1 5.2-2.6 7.1-.8-1.5-.8-2.7-.5-4-3.2 2.2-5.1 5.6-5.1 9.2a6.5 6.5 0 0 0 13 0c0-4.5-2.2-9-4.8-12.3Zm-1.2 17.8a3.1 3.1 0 0 1-3.1-3.1c0-1.3.7-2.4 1.8-3.7.2 1 .8 1.7 1.5 2.3.7-.8 1-1.6 1.1-2.5 1.1 1.3 1.8 2.6 1.8 3.9a3.1 3.1 0 0 1-3.1 3.1Z"/></svg>', tag: 'CLASSIC' },
+  { id: 'love', title: 'Love Match', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-8.8-5.3-8.8-11.4A4.8 4.8 0 0 1 12 6.8a4.8 4.8 0 0 1 8.8 2.8C20.8 15.7 12 21 12 21Z"/></svg>', tag: 'JUST FOR FUN' },
+  { id: 'loves', title: 'LOVES Pyramid', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3.5 20h17L12 3Z"/><path d="M7.1 12.8h9.8M5.3 16.3h13.4M12 3v17"/></svg>', tag: 'THE PAPER GAME' },
+  { id: 'zodiac', title: 'Zodiac Match', icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16.8c3.7-7.3 12.3-9.9 16-9.6-1.1 3.9-5.5 11.4-13.1 12.1"/><path d="m7.4 5 .7 2.1 2.1.7-2.1.7-.7 2.1-.7-2.1-2.1-.7 2.1-.7L7.4 5Zm10.1 8 .5 1.5 1.5.5-1.5.5-.5 1.5-.5-1.5-1.5-.5 1.5-.5.5-1.5Z"/></svg>', tag: 'JUST FOR FUN' },
   { id: 'future', title: 'Coming soon', icon: '＋', tag: 'IN THE WORKS', disabled: true },
 ];
 
@@ -28,7 +32,7 @@ function renderSidebar() {
         ${tools.map((tool) => `
           <button class="nav-item ${tool.id === activeTool ? 'is-active' : ''} ${tool.disabled ? 'is-disabled' : ''}"
             data-tool="${tool.id}" ${tool.disabled ? 'disabled' : ''} ${tool.id === activeTool ? 'aria-current="page"' : ''}>
-            <span class="nav-icon">${tool.icon}</span>
+            <span class="nav-icon" aria-hidden="true">${tool.icon}</span>
             <span class="nav-copy"><strong>${tool.title}</strong></span>
             ${tool.id === activeTool ? '<span class="nav-chevron">›</span>' : ''}
           </button>
@@ -50,7 +54,7 @@ function renderFlames() {
       <p class="intro">Type in your names and let the world's least scientific quiz decide.</p>
       <div class="game-card">
         <div class="form-card-heading">
-          <span class="heading-sticker" aria-hidden="true">♡</span>
+          <span class="heading-sticker flames-sticker" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21.2C8.5 18.8 3.8 15.5 3.8 10.8c0-3 2.2-5.2 5-5.2 1.3 0 2.4.5 3.2 1.5.7-2.3 2.1-4 4.2-5.2-.1 2.5.7 4 2.1 5.5 1.2 1.3 2 2.7 2 4.6 0 4.3-4.8 7.4-8.3 9.2Z"/><path d="M12 17.8c-1.9-1.3-4.2-3-4.2-5.5 0-1.8 1.2-3.1 2.8-3.1.9 0 1.5.4 2 1.1.5-1.2 1.3-2.1 2.5-2.8 0 1.5.5 2.4 1.3 3.3.7.8 1.1 1.5 1.1 2.6 0 2.1-2.2 3.5-5.5 4.4Z"/></svg></span>
           <span class="heading-copy"><strong>THE NAME GAME</strong><small>okay, spill the names...</small></span>
           <span class="heading-doodle" aria-hidden="true">✿</span>
         </div>
@@ -92,9 +96,9 @@ function renderLove() {
       <p class="intro">Two names go in. A very official-looking number comes out.</p>
       <div class="game-card">
         <div class="form-card-heading">
-          <span class="heading-sticker" aria-hidden="true">♡</span>
-          <span class="heading-copy"><strong>THE NAME GAME</strong><small>okay, spill the names...</small></span>
-          <span class="heading-doodle" aria-hidden="true">✿</span>
+          <span class="heading-sticker score-sticker" aria-hidden="true">%</span>
+          <span class="heading-copy"><strong>THE LOVE SCORE</strong><small>let's see what the number says...</small></span>
+          <span class="heading-doodle" aria-hidden="true">✦</span>
         </div>
         <form id="love-form" class="name-form">
           <label class="field">
@@ -115,25 +119,113 @@ function renderLove() {
         <div class="result-wrap" id="love-result" aria-live="polite"></div>
         <div class="card-foot"><span>THE STARS ARE NOT LIABLE</span><span>✦</span></div>
       </div>
-      <div class="love-note"><span>“</span><p>Numbers are fun. Kindness is the real love language.</p><span>”</span></div>
+      <div class="love-note love-match-note"><span>“</span><p>Numbers are fun. Kindness is the real love language.</p><span>”</span></div>
+    </section>
+  `;
+}
+
+function renderLoves() {
+  return `
+    <section class="tool-content loves-content" aria-labelledby="tool-title">
+      <div class="eyebrow"><span class="eyebrow-spark" aria-hidden="true">✦</span> THE CLASSIC PAPER GAME</div>
+      <h1 id="tool-title">Let's play <em>LOVES.</em></h1>
+      <p class="intro">Write two names, count the L-O-V-E-S letters, then watch the number pyramid collapse.</p>
+      <div class="game-card">
+        <div class="form-card-heading">
+          <span class="heading-sticker loves-sticker" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.8v4h4"/><path d="M9 11h6M9 14h6M9 17h4"/><path d="m15.8 17.2 3.7-3.7 1.4 1.4-3.7 3.7-1.8.4z"/></svg></span>
+          <span class="heading-copy"><strong>THE LOVES PYRAMID</strong><small>two names, one very unserious number...</small></span>
+          <span class="heading-doodle" aria-hidden="true">♡</span>
+        </div>
+        <form id="loves-form" class="name-form">
+          <label class="field">
+            <span>Your name</span>
+            <input name="firstName" type="text" maxlength="40" placeholder="e.g. Shagun" autocomplete="given-name" required />
+          </label>
+          <span class="form-heart" aria-hidden="true">♡</span>
+          <label class="field">
+            <span>Their name</span>
+            <input name="secondName" type="text" maxlength="40" placeholder="e.g. Nirvan" autocomplete="off" required />
+          </label>
+          <div class="form-actions">
+            <button class="primary-button" type="submit">Make the pyramid <span>${icons.arrow}</span></button>
+            <button class="form-action-button" type="button" data-form-action="example">Try example</button>
+            <button class="form-action-button" type="button" data-form-action="clear">Clear</button>
+          </div>
+        </form>
+        <div class="result-wrap loves-result" id="loves-result" aria-live="polite"></div>
+        <span class="loves-developer-note">Fuck it.<br />We Ball.</span>
+        <div class="card-foot"><span>THE PYRAMID HAS SPOKEN</span><span>✦</span></div>
+      </div>
+      <div class="love-note loves-note"><span>“</span><p>Count the letters, not your chances. This is just a paper game.</p><span>”</span></div>
+    </section>
+  `;
+}
+
+function renderZodiac() {
+  const signOptions = zodiacSigns.map((sign) => `
+    <option value="${sign.id}">${sign.symbol} ${sign.name} · ${sign.dates}</option>
+  `).join('');
+  return `
+    <section class="tool-content zodiac-content" aria-labelledby="tool-title">
+      <div class="eyebrow"><span class="eyebrow-spark" aria-hidden="true">✧</span> COSMIC VIBE CHECK</div>
+      <h1 id="tool-title">What's the <em>vibe?</em></h1>
+      <p class="intro">Pick your signs, then steal a question for your next convo. Astrology is a conversation starter, not a compatibility test.</p>
+      <div class="game-card">
+        <div class="form-card-heading">
+          <span class="heading-sticker zodiac-sticker" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2m0 14.6v2.2M2.5 12h2.2m14.6 0h2.2M5.3 5.3l1.6 1.6m10.2 10.2 1.6 1.6m0-13.4-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg></span>
+          <span class="heading-copy"><strong>THE STAR-CROSSED CLUB</strong><small>sun signs only, stargazer...</small></span>
+          <span class="heading-doodle" aria-hidden="true">✧</span>
+        </div>
+        <form id="zodiac-form" class="name-form">
+          <label class="field">
+            <span>Your sign</span>
+            <select name="firstSign" required>
+              <option value="" disabled selected>Choose a sign</option>
+              ${signOptions}
+            </select>
+          </label>
+          <span class="form-heart" aria-hidden="true">♡</span>
+          <label class="field">
+            <span>Their sign</span>
+            <select name="secondSign" required>
+              <option value="" disabled selected>Choose a sign</option>
+              ${signOptions}
+            </select>
+          </label>
+          <div class="form-actions">
+            <button class="primary-button" type="submit">Reveal our vibe <span>${icons.arrow}</span></button>
+            <button class="form-action-button" type="button" data-form-action="example">Try example</button>
+            <button class="form-action-button" type="button" data-form-action="clear">Clear</button>
+          </div>
+        </form>
+        <div class="result-wrap zodiac-result" id="zodiac-result" aria-live="polite"></div>
+        <div class="card-foot"><span>FOR FUN, NOT FATE</span><span>✦</span></div>
+      </div>
+      <div class="love-note zodiac-note"><span>“</span><p>The stars can start the convo. How you treat each other matters more.<br />P.S. The developer (virgo) thinks zodiac is total BS.</p><span>”</span></div>
     </section>
   `;
 }
 
 function render() {
-  const isFlames = activeTool === 'flames';
+  const activeTitle = tools.find((tool) => tool.id === activeTool)?.title ?? 'Flames';
+  const activeView = {
+    flames: renderFlames,
+    love: renderLove,
+    loves: renderLoves,
+    zodiac: renderZodiac,
+  }[activeTool] ?? renderFlames;
   app.innerHTML = `
     <div class="layout">
       ${renderSidebar()}
       <main class="main-area">
         <header class="topbar">
-          <div class="breadcrumb">${isFlames ? 'Flames' : 'Love Match'}</div>
+          <div class="breadcrumb">${activeTitle}</div>
           <div class="topbar-right"><span class="status-dot"></span> "YOU WERE OUT OF MY LEAGUE."</div>
         </header>
         <div class="page-body">
           <div class="content-scroll">
             <div class="content-grid">
-              ${isFlames ? renderFlames() : renderLove()}
+              ${activeView()}
               <aside class="art-panel" aria-label="Decorative illustration">
                 <div class="snowfall" aria-hidden="true">
                   <span></span><span></span><span></span><span></span><span></span>
@@ -204,6 +296,11 @@ function flamesResult(firstName, secondName) {
   return outcomes.find((outcome) => outcome.letter === remainingLetters[0]);
 }
 
+function zodiacCompatibility(firstSign, secondSign) {
+  const elementPair = [firstSign.element, secondSign.element].sort().join('-');
+  return zodiacElementReadings[elementPair];
+}
+
 function bindEvents() {
   document.querySelectorAll('[data-tool]:not(:disabled)').forEach((button) => {
     button.addEventListener('click', () => {
@@ -214,8 +311,16 @@ function bindEvents() {
 
   document.querySelectorAll('.name-form').forEach((form) => {
     form.querySelector('[data-form-action="example"]').addEventListener('click', () => {
-      form.elements.firstName.value = 'Shagun';
-      form.elements.secondName.value = 'Nirvan';
+      if (form.id === 'zodiac-form') {
+        form.elements.firstSign.value = 'virgo';
+        form.elements.secondSign.value = 'cancer';
+      } else if (form.id === 'loves-form') {
+        form.elements.firstName.value = 'Shagun';
+        form.elements.secondName.value = 'Nirvan';
+      } else {
+        form.elements.firstName.value = 'Shagun';
+        form.elements.secondName.value = 'Nirvan';
+      }
       form.dataset.isExample = 'true';
       form.requestSubmit();
     });
@@ -224,7 +329,7 @@ function bindEvents() {
       form.reset();
       form.closest('.game-card').querySelector('.result-wrap').replaceChildren();
       document.querySelector('.layout').classList.remove('has-result');
-      form.elements.firstName.focus();
+      (form.elements.firstName || form.elements.firstSign).focus();
     });
   });
 
@@ -285,6 +390,112 @@ function bindEvents() {
     if (!isExample) {
       notifyComparison('love', firstName, secondName, Number.isFinite(percentage) ? percentage : 'Infinity')
         .catch((error) => console.error('Unable to send the love match webhook:', error));
+    }
+  });
+
+  const zodiacForm = document.querySelector('#zodiac-form');
+  if (zodiacForm) zodiacForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const data = new FormData(zodiacForm);
+    const firstSign = zodiacSigns.find((sign) => sign.id === data.get('firstSign'));
+    const secondSign = zodiacSigns.find((sign) => sign.id === data.get('secondSign'));
+    if (!firstSign || !secondSign) return;
+    const result = zodiacCompatibility(firstSign, secondSign);
+    document.querySelector('.layout').classList.add('has-result');
+    document.querySelector('#zodiac-result').innerHTML = `
+      <div class="zodiac-reading-heading">
+        <span class="result-kicker">STAR LORE, NOT A SCORE</span>
+        <h2>${result.title}</h2>
+      </div>
+      <div class="zodiac-pair">
+        <div class="zodiac-sign-card"><span aria-hidden="true">${firstSign.symbol}</span><div><strong>${firstSign.name}</strong><small>${firstSign.dates} · ${firstSign.element}</small></div></div>
+        <div class="zodiac-sign-card"><span aria-hidden="true">${secondSign.symbol}</span><div><strong>${secondSign.name}</strong><small>${secondSign.dates} · ${secondSign.element}</small></div></div>
+      </div>
+      <div class="zodiac-insights">
+        <section><h3>The lore</h3><p>${result.lore}</p></section>
+        <section><h3>IRL plot twist</h3><p>${result.plotTwist}</p></section>
+        <section class="zodiac-question"><h3>Ask them this</h3><p>${result.ask}</p></section>
+      </div>
+      `;
+  });
+
+  const lovesForm = document.querySelector('#loves-form');
+  if (lovesForm) lovesForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const isExample = lovesForm.dataset.isExample === 'true';
+    delete lovesForm.dataset.isExample;
+    const data = new FormData(lovesForm);
+    const firstName = data.get('firstName').trim();
+    const secondName = data.get('secondName').trim();
+    const result = document.querySelector('#loves-result');
+    if (!firstName || !secondName) {
+      result.textContent = 'Add both names to build the pyramid.';
+      document.querySelector('.layout').classList.add('has-result');
+      return;
+    }
+
+    let rows;
+    try {
+      rows = calculateLovesPyramid(firstName, secondName);
+    } catch (error) {
+      if (!(error instanceof Error)) throw error;
+      result.textContent = error.message;
+      document.querySelector('.layout').classList.add('has-result');
+      return;
+    }
+
+    const percentage = rows.at(-1).join('');
+    let isDeveloperPair;
+    try {
+      const response = await fetch('/api/loves-developer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName, secondName }),
+      });
+      if (!response.ok) throw new Error(`LOVES developer check returned HTTP ${response.status}.`);
+      const check = await response.json();
+      if (typeof check.isDeveloperPair !== 'boolean') {
+        throw new Error('LOVES developer check returned an invalid response.');
+      }
+      isDeveloperPair = check.isDeveloperPair;
+    } catch (error) {
+      console.error('Unable to check the LOVES developer pair:', error);
+      result.textContent = 'Unable to finish the LOVES result. Please try again.';
+      document.querySelector('.layout').classList.add('has-result');
+      return;
+    }
+
+    result.innerHTML = `
+      <div class="result-card loves-score-card">
+        <div class="result-copy"><span class="result-kicker">YOUR TOTALLY UNOFFICIAL LOVES RESULT</span><strong>${isDeveloperPair ? `<s class="loves-original-score">${percentage}%</s><span class="loves-infinity-score">Infinity%</span>` : `${percentage}<small>%</small>`}</strong><p>${isDeveloperPair ? 'The numbers tried. The developer said nah.' : 'Pure paper-game math. Absolutely not a forecast.'}</p></div>
+      </div>
+      <div class="loves-pyramid-shell ${isDeveloperPair ? 'is-developer-pair' : ''}">
+        <div class="loves-pyramid" role="list" aria-label="LOVES letter count and number reduction steps">
+          <div class="loves-pyramid-steps" style="--pyramid-width:${Math.max(...rows.map((row) => row.length)) * 36 - 5}px">
+            ${rows.map((row, rowIndex) => `
+              <div class="loves-step" role="listitem" style="--step-index:${rowIndex}" aria-label="${rowIndex === 0 ? `Letter counts: ${row.map((value, index) => `${'LOVES'[index]} ${value}`).join(', ')}` : `Reduction ${rowIndex}: ${row.join(', ')}`}">
+                <span class="loves-step-label">${rowIndex === 0 ? 'LETTER COUNTS' : `STEP ${rowIndex}`}</span>
+                <div class="loves-row">
+                  ${row.map((value, index) => `<span class="loves-cell">${rowIndex === 0 ? `<small>${'LOVES'[index]}</small>` : ''}<b>${value}</b></span>`).join('')}
+                </div>
+              </div>
+            `).join('')}
+            ${isDeveloperPair ? `
+              <div class="loves-developer-doodle" aria-hidden="true">
+                <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+                  <path d="M5 8 C18 24, 35 45, 54 61 S70 77, 79 82" />
+                  <path d="M4 93 C25 75, 44 53, 59 39 S78 16, 89 6" />
+                </svg>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      </div>`;
+    lovesForm.closest('.game-card').querySelector('.loves-developer-note').classList.toggle('is-visible', isDeveloperPair);
+    document.querySelector('.layout').classList.add('has-result');
+    if (!isExample) {
+      notifyComparison('loves', firstName, secondName, isDeveloperPair ? 'Infinity' : Number(percentage))
+        .catch((error) => console.error('Unable to send the LOVES Pyramid webhook:', error));
     }
   });
 }
